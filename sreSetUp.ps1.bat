@@ -12,17 +12,12 @@ if ((Test-Admin) -eq $false)  {
         # tried to elevate, did not work, aborting
     } else {
         
-    Start-Process powershell.exe -Verb RunAs -ArgumentList ('-noprofile -C clear; $basename = "{0}";Invoke-Expression $(Get-Content -Raw "{0}")' -f ($myinvocation.MyCommand.Definition))  
+    Start-Process powershell.exe -Verb RunAs -ArgumentList ('-noprofile -C set-location $env:UserProfile\Desktop; $basename = "{0}";Invoke-Expression $(Get-Content -Raw "{0}")' -f ($myinvocation.MyCommand.Definition))  
     }
     exit
 }
 ##############################################
-# We need to install our applications. 
-#Invoke-webrequest -Uri https://ftp.nluug.nl/pub/vim/pc/gvim82.exe -UseBasicParsing -OutFile gvim82.exe; # Installs vim
-#python; # Will call the windows store for installation.
-#Write-Host "Python will be installed through user store. Please press a key to continue once installation is complete."
-#$Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown");
-#New-PSDrive -PSProvider registry -Root HKEY_CLASSES_ROOT -Name HKCR
+
 
 # checks to see if a command exists. Specifically to check aliases
 function Test-CommandExists($cmd)
@@ -54,12 +49,22 @@ function addContextFile($display, $command)
 
 
 # Helps with installation
-function downloadExecute($url, $name)
+function execDown($url, $name)
 {
-		
+	if (Test-Path -LiteralPath $name) { return; } # Do nothing on downloads
+	write-host "Installing $name..."
+	Invoke-webrequest -Uri "$url" -UseBasicParsing -OutFile $name;
+	.\$name 2> nul; # run the executable if its possible 
 }
 
+# We need to install our applications. 
 
+execDown https://ftp.nluug.nl/pub/vim/pc/gvim82.exe gvim82.exe; # Installs vim
+Write-Host "Python will be installed through user store. Installs will continue as normal..."
+python; # Will call the windows store for installation.
+execDown https://download.sysinternals.com/files/strings.zip strings.zip; # Installs strings
+#$Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown");
+New-PSDrive -PSProvider registry -Root HKEY_CLASSES_ROOT -Name HKCR
 
 
 
@@ -67,7 +72,6 @@ function downloadExecute($url, $name)
 $psLaunch = @'
 # 2> nul || @echo off & powershell -NoExit -ExecutionPolicy Bypass -C clear;$basename = '%~f0';Invoke-Expression $(Get-Content -Raw %0) & exit
 Set-Alias vim "C:\Program Files (x86)\Vim\vim82\vim.exe"
-Set-Alias cl "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\Hostx86\x86\cl.exe"
 # Oldpwd stores the location to the previously saved position. This allows us to springboard to last working location.
 $oldpwd = ""
 # This function allows us to export our current location to be reloaded when we launch a new powershell.
