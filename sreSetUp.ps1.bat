@@ -60,9 +60,15 @@ function AddToPath($dir)
 # Adds a context file command to the registry
 function addContextFile($display, $command)
 {
+	# check if the key exists first
 	if (!$(Test-Path -LiteralPath Registry::HKEY_CLASSES_ROOT\*\shell\$display)) 
-	{	New-Item -Path "Registry::HKEY_CLASSES_ROOT\*\shell\$display" -Name "command" -Value $command }
-	$core = ls -Filter Core_* | sort { [version]($_.Name -replace '^.*_(\d+(\.\d+){1,3})$', '$1') } -Descending | select -Index 0	
+	{	
+		$regPath='Registry::HKEY_CLASSES_ROOT\[*]\shell'; # store registry path as a literal to avoid globs
+		New-Item -Path $regPath -Name "$display"; # Builds the nametag for as it appear in menu
+		New-Item -Path "$regPath\$command" -Name 'command' -Value $command; # Pass the actual command to it
+	}
+	Write-Host "Command - $display - is now installed or was already installed on this system registry."  
+	#$core = ls -Filter Core_* | sort { [version]($_.Name -replace '^.*_(\d+(\.\d+){1,3})$', '$1') } -Descending | select -Index 0	
 	# Call as & "$($core.FullName)\path"
 	
 }
@@ -75,7 +81,7 @@ function execDown($url, $name, $desc=$null)
 	write-host "Installing $name..."
 	write-host "$desc"
 	Invoke-webrequest -Uri "$url" -UseBasicParsing -OutFile $name;
-	& $name 2> nul; # run the executable if its possible 
+	& .\$name 2> nul; # run the executable if its possible 
 	# If it was not able to run the command, attempt to extract it as a zip
 	if ($?) {
 		extract-archive -Path $name -DestinationPath .
