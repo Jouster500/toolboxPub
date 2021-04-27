@@ -1,4 +1,4 @@
-# 2> nul || @echo off & powershell.exe -NoProfile -ExecutionPolicy Bypass -C clear; $firstRun=true; $basename = '%~f0';Invoke-Expression $(Get-Content -Raw %0) & exit
+# 2> nul || @echo off & powershell.exe -NoProfile -ExecutionPolicy Bypass -C clear; $firstRun=$true; $basename = '%~f0';Invoke-Expression $(Get-Content -Raw %0) & exit
 # Allows us to access powershell regardless of permissions set.
 # 2> nul || exit
 
@@ -21,7 +21,7 @@ if ((Test-Admin) -eq $false)  {
         # tried to elevate, did not work, aborting
     } else {
         
-    Start-Process powershell.exe -Verb RunAs -ArgumentList ('-noprofile -C set-location $env:UserProfile; $firstRun=false;$basename = "{0}";Invoke-Expression $(Get-Content -Raw "{0}")' -f ($myinvocation.MyCommand.Definition))  
+    Start-Process powershell.exe -Verb RunAs -ArgumentList ('-noprofile -C set-location $env:UserProfile; $firstRun=$false;$basename = "{0}";Invoke-Expression $(Get-Content -Raw "{0}")' -f ($myinvocation.MyCommand.Definition))  
     }
     exit
 }
