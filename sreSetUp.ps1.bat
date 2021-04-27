@@ -21,7 +21,7 @@ if ((Test-Admin) -eq $false)  {
         # tried to elevate, did not work, aborting
     } else {
         
-    Start-Process powershell.exe -Verb RunAs -ArgumentList ('-noprofile -C set-location $env:UserProfile; $firstRun=$false;$basename = "{0}";Invoke-Expression $(Get-Content -Raw "{0}")' -f ($myinvocation.MyCommand.Definition))  
+    Start-Process powershell.exe -Verb RunAs -ArgumentList ('-noprofile -C set-location $env:UserProfile; $firstRun=$false;$basename = "{0}";Invoke-Expression $(Get-Content -Raw $basename)' -f ($myinvocation.MyCommand.Definition))  
     }
     exit
 }
@@ -34,6 +34,12 @@ function pause($msg="Press any key to continue...")
 	$Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
 
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+# Unzips the a directory to a path where the default is the zipfile without its extensions
+function unzip($zipfile, $outpath="$(Get-Location)\[io.path]::GetFileNameWithoutExtension($zipfile)")
+{
+	[System.IO.Compression.ZipFile]::ExtractToDirectory("$(resolve-path $zipfile)", $outpath)
+}
 
 # checks to see if a command exists. Specifically to check aliases
 function Test-CommandExists($cmd)
@@ -80,10 +86,11 @@ function execDown($url, $name, $desc=$null)
 	write-host "Installing $name..."
 	write-host "$desc"
 	Invoke-webrequest -Uri "$url" -UseBasicParsing -OutFile $name;
-	& $name 2> nul; # run the executable if its possible 
+	Invoke-Expression ".\$name 2> nul"; # run the executable if its possible 
 	# If it was not able to run the command, attempt to extract it as a zip
 	if ($?) {
-		extract-archive -Path $name -DestinationPath .
+		unzip $name; # Attempt to unzip the directory
+		#extract-archive -Path $name -DestinationPath .
 	}
 }
 
