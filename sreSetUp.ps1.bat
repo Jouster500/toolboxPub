@@ -1,4 +1,4 @@
-# 2> nul || @echo off & powershell.exe -NoProfile -ExecutionPolicy Bypass -C clear; $basename = '%~f0';Invoke-Expression $(Get-Content -Raw %0) & exit
+# 2> nul || @echo off & powershell.exe -NoProfile -ExecutionPolicy Bypass -C clear; $firstRun=true; $basename = '%~f0';Invoke-Expression $(Get-Content -Raw %0) & exit
 # Allows us to access powershell regardless of permissions set.
 # 2> nul || exit
 
@@ -17,17 +17,16 @@ function Test-Admin {
 }
 # By nature of our execution, we need to pass things back as an admin, and subsequently, we must provide a catch here.
 if ((Test-Admin) -eq $false)  {
-    if ($elevated) {
+    if ($elevated -or !$firstRun) {
         # tried to elevate, did not work, aborting
     } else {
         
-    Start-Process powershell.exe -Verb RunAs -ArgumentList ('-noprofile -C set-location $env:UserProfile\Desktop; $basename = "{0}";Invoke-Expression $(Get-Content -Raw "{0}")' -f ($myinvocation.MyCommand.Definition))  
+    Start-Process powershell.exe -Verb RunAs -ArgumentList ('-noprofile -C set-location $env:UserProfile; $firstRun=false;$basename = "{0}";Invoke-Expression $(Get-Content -Raw "{0}")' -f ($myinvocation.MyCommand.Definition))  
     }
     exit
 }
 ##############################################
 #echo $null > $pubDesk\testing.txt
-exit
 # Pauses execution until keypress
 function pause($msg="Press any key to continue...")
 {
@@ -81,7 +80,7 @@ function execDown($url, $name, $desc=$null)
 	write-host "Installing $name..."
 	write-host "$desc"
 	Invoke-webrequest -Uri "$url" -UseBasicParsing -OutFile $name;
-	& .\$name 2> nul; # run the executable if its possible 
+	& $name 2> nul; # run the executable if its possible 
 	# If it was not able to run the command, attempt to extract it as a zip
 	if ($?) {
 		extract-archive -Path $name -DestinationPath .
@@ -106,9 +105,9 @@ function installPython() {
 mkdir ~\toolbox; # Create a directory for our toolbox
 cd ~\toolbox; # Sets active dir to the toolbox
 
-execDown https://ftp.nluug.nl/pub/vim/pc/gvim82.exe gvim82.exe "Vim is needed for working from the command line any text files you so desire.\nWindows is lacking in a commandline editor from the getgo so it is thus important to accomadate such implementation..."; # Installs vim
-execDown https://download.sysinternals.com/files/Strings.zip strings.zip; # Installs strings
-execDown https://github.com/schlafwandler/ghidra_SavePatch/archive/refs/heads/master.zip ghidra_SavePatch.zip; # Installs savePatch.py
+execDown https://ftp.nluug.nl/pub/vim/pc/gvim82.exe gvim82.exe "Vim is needed for working from the command line any text files you so desire.`nWindows is lacking in a commandline editor from the getgo so it is thus important to accomadate such implementation..."; # Installs vim
+execDown https://download.sysinternals.com/files/Strings.zip strings.zip "Strings is intended to display all the strings of given executable. `nUseful for finding interesting sections."; # Installs strings
+execDown https://github.com/schlafwandler/ghidra_SavePatch/archive/refs/heads/master.zip ghidra_SavePatch.zip "SavePatch is a ghidra script that allows a user to make direct modifications to code. Needs ghidra to be installed"; # Installs savePatch.py
 installPython
 New-PSDrive -PSProvider registry -Root HKEY_CLASSES_ROOT -Name HKCR
 addContextFile "Get Report" 'cmd /C ""C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\bin\Hostx86\x86\dumpbin.exe"" "/DEPENDENTS /IMPORTS /HEADERS /SYMBOLS /SUMMARY "%1"" & set /P out=[Press any key to continue]'
@@ -135,4 +134,4 @@ Function save {
 cd $oldpwd
 '@
 
-Set-Content -Path .\psLaunch.ps1.bat -Value $psLaunch
+Set-Content -Path $desktop\psLaunch.ps1.bat -Value $psLaunch
