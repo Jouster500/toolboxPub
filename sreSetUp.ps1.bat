@@ -74,7 +74,7 @@ function addContextFile($display, $command)
 	{	
 		$regPath='Registry::HKEY_CLASSES_ROOT\[*]\shell'; # store registry path as a literal to avoid globs
 		New-Item -Path $regPath -Name "$display"; # Builds the nametag for as it appear in menu
-		New-Item -Path "$regPath\$command" -Name 'command' -Value $command; # Pass the actual command to it
+		New-Item -Path "$regPath\$display" -Name 'command' -Value $command; # Pass the actual command to it
 	}
 	Write-Host "Command - $display - is now installed or was already installed on this system registry."  
 	#$core = ls -Filter Core_* | sort { [version]($_.Name -replace '^.*_(\d+(\.\d+){1,3})$', '$1') } -Descending | select -Index 0	
