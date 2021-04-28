@@ -134,7 +134,7 @@ function installPython() {
 	# Adds dumpbin report to the context menu of right clicking files
 	addContextFile "Get Report" 'cmd /C ""C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\bin\Hostx86\x86\dumpbin.exe"" "/DEPENDENTS /IMPORTS /HEADERS /SYMBOLS /SUMMARY "%1"" & set /P out=[Press any key to continue]'
 	# Adds a strings report with offset in the right clicking of files
-	addContextFile "Get Strings" 'cmd /C ""%HOMEDRIVE%%HOMEPATH%\toolbox\strings\strings.exe"" " -o "%1"" & set /P out=[Press any key to continue]'
+	addContextFile "Get Strings" 'cmd /C ""%%HOMEDRIVE%%%%HOMEPATH%%\toolbox\strings\strings.exe"" " -o "%1"" & set /P out=[Press any key to continue]'
 	
 #	exit; # end script
 #}
