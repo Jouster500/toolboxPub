@@ -16,8 +16,8 @@ function Test-Admin {
     $currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
 }
 # By nature of our execution, we need to pass things back as an admin, and subsequently, we must provide a catch here.
-function elevate()
-{
+#function elevate()
+#{
 	if ((Test-Admin) -eq $false)  {
 		if ($elevated -or !$firstRun) {
         	# tried to elevate, did not work, aborting
@@ -26,9 +26,9 @@ function elevate()
 		Start-Process powershell.exe -Verb RunAs -ArgumentList ('-noprofile -C set-location $env:UserProfile; $firstRun=$false;$basename = "{0}";Invoke-Expression $(Get-Content -Raw $basename)' -f ($myinvocation.MyCommand.Definition))  
     		}
     	exit
-}
+	}	
 
-}
+#}
 ##############################################
 #echo $null > $pubDesk\testing.txt
 # Pauses execution until keypress
@@ -40,7 +40,7 @@ function pause($msg="Press any key to continue...")
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 # Unzips the a directory to a path where the default is the zipfile without its extensions
-function unzip($zipfile, $outpath="$(Get-Location)\[io.path]::GetFileNameWithoutExtension($zipfile)")
+function unzip($zipfile, $outpath="$(Get-Location)\$([io.path]::GetFileNameWithoutExtension($zipfile))")
 {
 	[System.IO.Compression.ZipFile]::ExtractToDirectory("$(resolve-path $zipfile)", $outpath)
 }
@@ -90,7 +90,7 @@ function execDown($url, $name, $desc=$null)
 	write-host "Installing $name..."
 	write-host "$desc"
 	Invoke-webrequest -Uri "$url" -UseBasicParsing -OutFile $name;
-	Invoke-Expression ".\$name 2> nul"; # run the executable if its possible 
+	Invoke-Expression ".\$name"; # run the executable if its possible 
 	# If it was not able to run the command, attempt to extract it as a zip
 	if ($?) {
 		unzip $name; # Attempt to unzip the directory
@@ -113,10 +113,11 @@ function installPython() {
 }
 ######################### END OF FUNCTION DECLARATIONS ###################################
 # We need to install our applications. 
-function lowLevel()
-{
+
+#function lowLevel()
+#{
 	# Exit if we are not the first run
-	if (!$firstRun) {return; }
+#	if (!$firstRun) {return; }
 	mkdir ~\toolbox; # Create a directory for our toolbox
 	cd ~\toolbox; # Sets active dir to the toolbox
 
@@ -124,17 +125,17 @@ function lowLevel()
 	execDown https://download.sysinternals.com/files/Strings.zip strings.zip "Strings is intended to display all the strings of given executable. `nUseful for finding interesting sections."; # Installs strings
 	execDown https://github.com/schlafwandler/ghidra_SavePatch/archive/refs/heads/master.zip ghidra_SavePatch.zip "SavePatch is a ghidra script that allows a user to make direct modifications to code. Needs ghidra to be installed"; # Installs savePatch.py
 	installPython
-}
+#}
 # These elements require we run the script from an elevated postion
-function highLevel()
-{
-	if ($firstRun) { elevate; return;} # Elevate the script and return 
+#function highLevel()
+#{
+	#if ($firstRun) { elevate; return;} # Elevate the script and return 
 	New-PSDrive -PSProvider registry -Root HKEY_CLASSES_ROOT -Name HKCR
 	addContextFile "Get Report" 'cmd /C ""C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\bin\Hostx86\x86\dumpbin.exe"" "/DEPENDENTS /IMPORTS /HEADERS /SYMBOLS /SUMMARY "%1"" & set /P out=[Press any key to continue]'
 	
 	
-	exit; # end script
-}
+#	exit; # end script
+#}
 
 <# TODO: Add report key as follows; 
 cmd /C ""C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\bin\Hostx86\x86\dumpbin.exe"" "/DEPENDENTS /IMPORTS /HEADERS /SYMBOLS /SUMMARY "%1"" & set /P out=[Press any key to continue]
@@ -144,8 +145,8 @@ right click. Useful during operations.
 
 #>
 
-lowLevel; # Execute all functions that do not need an elevated permissions
-highLevel; # Execute all functions that do need an elevated permissions
+#lowLevel; # Execute all functions that do not need an elevated permissions
+#highLevel; # Execute all functions that do need an elevated permissions
 
 $psLaunch = @'
 # 2> nul || @echo off & powershell -NoExit -ExecutionPolicy Bypass -C clear;$basename = '%~f0';Invoke-Expression $(Get-Content -Raw %0) & exit
